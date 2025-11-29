@@ -78,9 +78,8 @@ void print_output_details(double ratio, int window_width, char password[]) {
     printf("│%s│\n", repeat_char(' ', window_width - 2));
     printf("│%s│\n", repeat_char(' ', window_width - 2));
     // TODO: Copy password to clipboard
-    // TODO: Don't use hardcoded values like 62
     printf("│ Password: %s %s │", password,
-           repeat_char(' ', window_width - 40));
+           repeat_char(' ', window_width - 15 - strlen(password)));
     printf("│%s│\n", repeat_char(' ', window_width - 2));
     printf("│%s│\n", repeat_char(' ', window_width - 2));
     printf("│ Strength: ");
