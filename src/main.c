@@ -1,14 +1,17 @@
+#include <asm-generic/ioctls.h>
 #include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #define RESET "\x1b[0m"
 #define DEFAULT_LENGTH 25
 
-const int BARS = 100;
+const int MAX_BARS = 150;
 const int MAX_ENTROPY = 128;
 
 int get_random_int(int max) { return rand() % (max + 1); };
@@ -37,23 +40,22 @@ int is_number(const char *s) {
     return 1;
 };
 
-void print_color_block(int idx) {
+void print_color_block(int idx, int total_width) {
     double gamma = 1.4;
-    double t = pow(1 - (float)idx / BARS, gamma); // smooth curve
+    double t = pow(1 - (float)idx / total_width, gamma); // smooth curve
     int r = (int)(255 * t);
     int g = (int)(200 * (1 - t));
     int b = (int)(60 * (1 - t) + 30 * t);
     printf("\x1b[38;2;%d;%d;%dm█\x1b[0m", r, g, b);
 }
 
-void print_bar(double ratio) {
-    int width = BARS; // Number of blocks in the bar
-    int filled = (int)(ratio * width);
+void print_bar(double ratio, int total_width) {
+    int filled = (int)(ratio * total_width);
 
     printf("[");
-    for (int i = 0; i < width; i++) {
+    for (int i = 0; i < total_width; i++) {
         if (i < filled) {
-            print_color_block(i);
+            print_color_block(i, total_width);
         } else {
             printf(" ");
         }
@@ -66,6 +68,15 @@ int main() {
     int pass_len;
     char input[100];
     bool should_include_symbols = true;
+    struct winsize window_size;
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &window_size) == -1) {
+        perror("Could not determine window size\n");
+        return 1;
+    }
+    // Subtract 2 from the width, to account for opening and closing brackets
+    int total_width =
+        window_size.ws_col - 2 > MAX_BARS ? MAX_BARS : window_size.ws_col - 2;
 
     const char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const char lower[] = "abcdefghijklmnopqrstuvwxyz";
@@ -117,7 +128,7 @@ int main() {
 
     int entropy = get_entropy(chars, max_char_set_index, pass_len);
     float ratio = (float)entropy / (float)MAX_ENTROPY;
-    print_bar(ratio);
+    print_bar(ratio, total_width);
 
     for (int i = 0; i < pass_len; i++) {
         int next_char_set_index = get_random_int(max_char_set_index);
