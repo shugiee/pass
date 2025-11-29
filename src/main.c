@@ -16,6 +16,15 @@ const int MAX_ENTROPY = 128;
 
 int get_random_int(int max) { return rand() % (max + 1); };
 
+char *repeat_char(char c, int n) {
+    char *s = malloc(n + 1); // +1 for null terminator
+    if (!s)
+        return NULL;
+    memset(s, c, n);
+    s[n] = '\0';
+    return s;
+}
+
 int get_entropy(const char *chars[], int max_char_set_index,
                 int password_length) {
     int char_set_length = 0;
@@ -40,28 +49,57 @@ int is_number(const char *s) {
     return 1;
 };
 
-void print_color_block(int idx, int total_width) {
+void print_color_block(int idx, int window_width) {
     double gamma = 1.4;
-    double t = pow(1 - (float)idx / total_width, gamma); // smooth curve
+    double t = pow(1 - (float)idx / window_width, gamma); // smooth curve
+    char *progress_block = "◼";
     int r = (int)(255 * t);
     int g = (int)(200 * (1 - t));
     int b = (int)(60 * (1 - t) + 30 * t);
-    printf("\x1b[38;2;%d;%d;%dm█\x1b[0m", r, g, b);
+
+    printf("\x1b[38;2;%d;%d;%dm%s\x1b[0m", r, g, b, progress_block);
 }
 
-void print_bar(double ratio, int total_width) {
-    int filled = (int)(ratio * total_width);
+void print_output_details(double ratio, int window_width, char password[]) {
+    int filled = (int)(ratio * window_width);
+    char *text = "Your password";
 
-    printf("[");
-    for (int i = 0; i < total_width; i++) {
+    // Top border
+    printf("┌");
+    for (int i = 0; i < 4; i++) {
+        printf("─");
+    }
+    printf(" %s ", text);
+    for (int i = 19; i < window_width - 2; i++) {
+        printf("─");
+    }
+    printf("┐");
+
+    printf("│%s│\n", repeat_char(' ', window_width - 2));
+    printf("│%s│\n", repeat_char(' ', window_width - 2));
+    // TODO: Copy password to clipboard
+    // TODO: Don't use hardcoded values like 62
+    printf("│ Password [Copied to clipboard]: %s %s │", password,
+           repeat_char(' ', window_width - 62));
+    printf("│%s│\n", repeat_char(' ', window_width - 2));
+    printf("│%s│\n", repeat_char(' ', window_width - 2));
+    printf("│ Strength: ");
+    for (int i = 12; i < window_width - 1; i++) {
         if (i < filled) {
-            print_color_block(i, total_width);
+            print_color_block(i, window_width);
         } else {
             printf(" ");
         }
     }
     printf("%s", RESET);
-    printf("]\n");
+    printf("│\n");
+    printf("│%s│\n", repeat_char(' ', window_width - 2));
+    printf("│%s│\n", repeat_char(' ', window_width - 2));
+    printf("└");
+    for (int i = 0; i < window_width - 2; i++) {
+        printf("─");
+    }
+    printf("┘\n");
 };
 
 int main() {
@@ -74,9 +112,8 @@ int main() {
         perror("Could not determine window size\n");
         return 1;
     }
-    // Subtract 2 from the width, to account for opening and closing brackets
-    int total_width =
-        window_size.ws_col - 2 > MAX_BARS ? MAX_BARS : window_size.ws_col - 2;
+    int window_width =
+        window_size.ws_col > MAX_BARS ? MAX_BARS : window_size.ws_col;
 
     const char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const char lower[] = "abcdefghijklmnopqrstuvwxyz";
@@ -128,7 +165,6 @@ int main() {
 
     int entropy = get_entropy(chars, max_char_set_index, pass_len);
     float ratio = (float)entropy / (float)MAX_ENTROPY;
-    print_bar(ratio, total_width);
 
     for (int i = 0; i < pass_len; i++) {
         int next_char_set_index = get_random_int(max_char_set_index);
@@ -141,7 +177,8 @@ int main() {
     // Null-terminate the string
     password[pass_len] = '\0';
 
-    printf("Your password is: %s\n", password);
+    // Output the details
+    print_output_details(ratio, window_width, password);
 
     return 0;
 }
