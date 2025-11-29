@@ -6,8 +6,9 @@
 #include <string.h>
 
 #define RESET "\x1b[0m"
+#define DEFAULT_LENGTH 25
 
-const int BARS = 30;
+const int BARS = 100;
 const int MAX_ENTROPY = 128;
 
 int get_random_int(int max) { return rand() % (max + 1); };
@@ -24,6 +25,16 @@ int get_entropy(const char *chars[], int max_char_set_index,
     int log_len = log2(char_set_length);
 
     return password_length * log_len;
+};
+
+int is_number(const char *s) {
+    if (*s == '\0')
+        return 0; // empty string
+    for (int i = 0; s[i]; i++) {
+        if (!isdigit((unsigned char)s[i]))
+            return 0;
+    }
+    return 1;
 };
 
 void print_color_block(int idx) {
@@ -53,7 +64,7 @@ void print_bar(double ratio) {
 
 int main() {
     int pass_len;
-    char input;
+    char input[100];
     bool should_include_symbols = true;
 
     const char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -62,15 +73,39 @@ int main() {
     const char symbols[] = "!@#$%^&*()_+-=[]{};':\",.<>/?\\|";
     const char *chars[] = {upper, lower, digits, symbols};
 
-    printf("How long do you want your password to be?\n");
-    scanf(" %d", &pass_len);
+    printf("How many characters do you want your password to be? [25 chars]\n");
+
+    // fgets allows us to detect empty inputs
+    if (fgets(input, sizeof(input), stdin) != NULL) {
+        // Remove trailing newline
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strlen(input) == 0) {
+            // user just pressed enter
+            pass_len = DEFAULT_LENGTH;
+        } else if (is_number(input)) {
+            pass_len = atoi(input);
+        } else {
+            printf("Invalid input. Using default value of %d\n",
+                   DEFAULT_LENGTH);
+            pass_len = DEFAULT_LENGTH;
+        }
+    }
 
     char password[pass_len + 1];
 
     printf("Do you want to include symbols? [Y/N; default Y]\n");
-    if (scanf(" %c", &input) == 1) {
-        input = tolower((unsigned char)input);
-        should_include_symbols = (input == 'y');
+    if (fgets(input, sizeof(input), stdin) != NULL) {
+        // Remove trailing newline
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strlen(input) == 0) {
+            should_include_symbols = true;
+        } else if (tolower(input[0]) == 'n') {
+            should_include_symbols = false;
+        } else {
+            printf("Invalid input. Using default value of 'yes'\n");
+        }
     }
 
     int max_char_set_index;
