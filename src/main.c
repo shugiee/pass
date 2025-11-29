@@ -5,10 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define RESET "\x1b[0m"
+
+const int BARS = 30;
+const int MAX_ENTROPY = 128;
+
 int get_random_int(int max) { return rand() % (max + 1); };
 
-// TODO: Next, calculate entropy. Then, show it in a nice TUI
-// int calculate_entropy(char *
 int get_entropy(const char *chars[], int max_char_set_index,
                 int password_length) {
     int char_set_length = 0;
@@ -21,6 +24,31 @@ int get_entropy(const char *chars[], int max_char_set_index,
     int log_len = log2(char_set_length);
 
     return password_length * log_len;
+};
+
+void print_color_block(int idx) {
+    double gamma = 1.4;
+    double t = pow(1 - (float)idx / BARS, gamma); // smooth curve
+    int r = (int)(255 * t);
+    int g = (int)(200 * (1 - t));
+    int b = (int)(60 * (1 - t) + 30 * t);
+    printf("\x1b[38;2;%d;%d;%dm█\x1b[0m", r, g, b);
+}
+
+void print_bar(double ratio) {
+    int width = BARS; // Number of blocks in the bar
+    int filled = (int)(ratio * width);
+
+    printf("[");
+    for (int i = 0; i < width; i++) {
+        if (i < filled) {
+            print_color_block(i);
+        } else {
+            printf(" ");
+        }
+    }
+    printf("%s", RESET);
+    printf("]\n");
 };
 
 int main() {
@@ -52,8 +80,9 @@ int main() {
         max_char_set_index = (int)(sizeof(chars) / sizeof(chars[0])) - 2;
     }
 
-    printf("Entropy of proposed password: %d\n",
-           get_entropy(chars, max_char_set_index, pass_len));
+    int entropy = get_entropy(chars, max_char_set_index, pass_len);
+    float ratio = (float)entropy / (float)MAX_ENTROPY;
+    print_bar(ratio);
 
     for (int i = 0; i < pass_len; i++) {
         int next_char_set_index = get_random_int(max_char_set_index);
