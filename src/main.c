@@ -1,3 +1,4 @@
+#include "number_helpers.h"
 #include <asm-generic/ioctls.h>
 #include <ctype.h>
 #include <math.h>
@@ -13,8 +14,6 @@
 
 const int MAX_BARS = 150;
 const int MAX_ENTROPY = 128;
-
-int get_random_int(int max) { return rand() % (max + 1); };
 
 char *repeat_char(char c, int n) {
     char *s = malloc(n + 1); // +1 for null terminator
@@ -37,16 +36,6 @@ int get_entropy(const char *chars[], int max_char_set_index,
     int log_len = log2(char_set_length);
 
     return password_length * log_len;
-};
-
-int is_number(const char *s) {
-    if (*s == '\0')
-        return 0; // empty string
-    for (int i = 0; s[i]; i++) {
-        if (!isdigit((unsigned char)s[i]))
-            return 0;
-    }
-    return 1;
 };
 
 void print_color_block(int idx, int window_width) {
@@ -77,7 +66,6 @@ void print_output_details(double ratio, int window_width, char password[]) {
 
     printf("│%s│\n", repeat_char(' ', window_width - 2));
     printf("│%s│\n", repeat_char(' ', window_width - 2));
-    // TODO: Copy password to clipboard
     printf("│ Password: %s %s │\n", password,
            repeat_char(' ', window_width - 15 - strlen(password)));
     printf("│%s│\n", repeat_char(' ', window_width - 2));
