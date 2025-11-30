@@ -1,0 +1,34 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-std=c17",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "build/number_helpers.o",
+      "src/number_helpers.c"
+    ],
+    "directory": "/home/jay/Documents/projects/pass",
+    "file": "/home/jay/Documents/projects/pass/src/number_helpers.c",
+    "output": "/home/jay/Documents/projects/pass/build/number_helpers.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-std=c17",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "build/main.o",
+      "src/main.c"
+    ],
+    "directory": "/home/jay/Documents/projects/pass",
+    "file": "/home/jay/Documents/projects/pass/src/main.c",
+    "output": "/home/jay/Documents/projects/pass/build/main.o"
+  }
+]
