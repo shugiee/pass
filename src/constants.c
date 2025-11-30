@@ -1,4 +1,3 @@
-// TODO: move to contants
 const int MAX_BARS = 150;
 
 const char upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

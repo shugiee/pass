@@ -1,4 +1,5 @@
 #include "number_helpers.h"
+
 #include <asm-generic/ioctls.h>
 #include <ctype.h>
 #include <stdbool.h>
